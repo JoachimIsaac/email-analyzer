@@ -1,14 +1,21 @@
 """Django settings for EmailAnalyzer."""
 
 import os
+import sys
+from datetime import timedelta
 from pathlib import Path
 
+import truststore
 from dotenv import load_dotenv
+
+# Patch Python's SSL to use the OS certificate store (fixes SSL on Windows)
+truststore.inject_into_ssl()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR.parent / ".env")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-change-me")
+FIELD_ENCRYPTION_KEY = os.environ.get("FIELD_ENCRYPTION_KEY", None)
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = [
@@ -26,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "rest_framework_simplejwt",
     "apps.accounts",
     "apps.emails",
     "apps.companies",
@@ -87,12 +95,54 @@ USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# ── Django REST Framework ──────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
 
+# ── JWT ────────────────────────────────────────────────────────────────────────
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+}
+
+# ── Google OAuth ───────────────────────────────────────────────────────────────
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.environ.get(
+    "GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback"
+)
+GOOGLE_SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/gmail.readonly",
+]
+
+# Frontend URL — where to redirect after successful OAuth
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "apps": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+    },
+}
+
+# ── CORS ───────────────────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
