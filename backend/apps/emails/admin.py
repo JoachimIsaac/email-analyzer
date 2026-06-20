@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Classification, Email
+from .models import Classification, Email, SyncJob
 
 
 class ClassificationInline(admin.StackedInline):
@@ -31,3 +31,11 @@ class ClassificationAdmin(admin.ModelAdmin):
     list_filter = ("label",)
     search_fields = ("email__subject", "email__sender")
     readonly_fields = ("classified_at",)
+
+
+@admin.register(SyncJob)
+class SyncJobAdmin(admin.ModelAdmin):
+    list_display = ("user", "status", "batch_size", "emails_fetched", "emails_classified", "emails_skipped", "new_classifications", "created_at")
+    list_filter = ("status",)
+    search_fields = ("user__email",)
+    readonly_fields = ("created_at", "updated_at")
