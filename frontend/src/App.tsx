@@ -1,72 +1,62 @@
-import { useEffect, useState } from "react";
-import { fetchHealth } from "./api/health";
-import type { HealthResponse } from "./api/client";
-import { ApiError } from "./api/client";
+import { useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { isAuthenticated } from "./api/auth";
+import Header from "./components/Header";
+import { useAuth } from "./hooks/useAuth";
+import { C } from "./lib/theme";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import AuthCallback from "./pages/AuthCallback";
+import DashboardPage from "./pages/DashboardPage";
+import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
 
-type LoadState =
-  | { kind: "loading" }
-  | { kind: "success"; data: HealthResponse }
-  | { kind: "error"; message: string };
+function ProtectedApp() {
+  const { user, loading } = useAuth();
+  const [syncStatus, setSyncStatus] = useState<"idle" | "running">("idle");
 
-function StatusBadge({ value }: { value: string }) {
-  const className =
-    value === "ok" ? "badge ok" : value === "loading" ? "badge loading" : "badge error";
-  return <span className={className}>{value}</span>;
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: C.bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: C.muted,
+          fontSize: "14px",
+        }}
+      >
+        Loading…
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  return (
+    <div style={{ minHeight: "100vh", backgroundColor: C.bg }}>
+      <Header user={user} syncStatus={syncStatus} />
+      <main style={{ maxWidth: "1280px", margin: "0 auto", padding: "24px" }}>
+        <Routes>
+          <Route index element={<DashboardPage onSyncStatusChange={setSyncStatus} />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
+        </Routes>
+      </main>
+    </div>
+  );
 }
 
 export default function App() {
-  const [state, setState] = useState<LoadState>({ kind: "loading" });
-
-  useEffect(() => {
-    fetchHealth()
-      .then((data) => setState({ kind: "success", data }))
-      .catch((err: unknown) => {
-        const message =
-          err instanceof ApiError
-            ? `API error (${err.status}): ${err.message}`
-            : err instanceof Error
-              ? err.message
-              : "Unknown error";
-        setState({ kind: "error", message });
-      });
-  }, []);
-
   return (
-    <main className="app">
-      <h1>Job Search Email Classifier</h1>
-      <p className="subtitle">Phase 0 — system health</p>
-
-      <div className="health-card">
-        {state.kind === "loading" && (
-          <>
-            <div className="health-row">
-              <span className="label">API</span>
-              <StatusBadge value="loading" />
-            </div>
-            <div className="health-row">
-              <span className="label">Database</span>
-              <StatusBadge value="loading" />
-            </div>
-          </>
-        )}
-
-        {state.kind === "success" && (
-          <>
-            <div className="health-row">
-              <span className="label">API</span>
-              <StatusBadge value={state.data.status} />
-            </div>
-            <div className="health-row">
-              <span className="label">Database</span>
-              <StatusBadge value={state.data.database} />
-            </div>
-          </>
-        )}
-
-        {state.kind === "error" && (
-          <p className="error-message">Could not reach backend: {state.message}</p>
-        )}
-      </div>
-    </main>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route
+        path="/login"
+        element={isAuthenticated() ? <Navigate to="/app" replace /> : <LoginPage />}
+      />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/app/*" element={<ProtectedApp />} />
+    </Routes>
   );
 }

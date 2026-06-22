@@ -161,7 +161,7 @@ docker-compose.yml        # Postgres (+ optionally backend)
 
 ## 10. Build phases (current = update this line as you go)
 
-> **CURRENT PHASE: 0 — scaffolding**
+> **CURRENT PHASE: 3 — OpenAI classifier service**
 
 0. Scaffolding: Django + DRF + Postgres + React, one working end-to-end endpoint.
 1. Models + migrations + Django admin.
