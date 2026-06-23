@@ -295,7 +295,7 @@ export function demoFetchTrends(): TrendsData {
       for (const l of labels) row[l] = counts[l] ?? 0;
       return row;
     });
-  return { trends: trends as TrendsData["trends"] };
+  return { trends: trends as unknown as TrendsData["trends"] };
 }
 
 export function demoFetchEmails(page: number, label?: string): EmailsPage {

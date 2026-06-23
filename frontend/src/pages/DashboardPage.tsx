@@ -24,11 +24,6 @@ function pct(n: number, d: number) {
   return `${((n / d) * 100).toFixed(1)}%`;
 }
 
-const TOOLTIP = {
-  contentStyle: { backgroundColor: C.card2, border: `1px solid ${C.border}`, borderRadius: 8 },
-  labelStyle: { color: C.muted },
-};
-
 export default function DashboardPage({ onSyncStatusChange }: Props) {
   const [funnel, setFunnel] = useState<FunnelData | null>(null);
   const [history, setHistory] = useState<SyncHistory | null>(null);
@@ -118,10 +113,7 @@ export default function DashboardPage({ onSyncStatusChange }: Props) {
               <Tooltip
                 contentStyle={{ backgroundColor: C.card2, border: `1px solid ${C.border}`, borderRadius: 8 }}
                 labelStyle={{ color: C.text, fontWeight: 600, marginBottom: 4 }}
-                formatter={(value: number, _name: string, props) => [
-                  `${value} classified · ${props.payload.newCount} new`,
-                  props.payload.label,
-                ]}
+                formatter={(value) => [`${value} classified`, ""]}
               />
               <Bar dataKey="classified" fill={C.accent} radius={[4, 4, 0, 0]} name="Classified" maxBarSize={56} />
             </BarChart>
