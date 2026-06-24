@@ -69,16 +69,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("PGDATABASE", os.environ.get("POSTGRES_DB", "emailanalyzer")),
-        "USER": os.environ.get("PGUSER", os.environ.get("POSTGRES_USER", "emailanalyzer")),
-        "PASSWORD": os.environ.get("PGPASSWORD", os.environ.get("POSTGRES_PASSWORD", "emailanalyzer")),
-        "HOST": os.environ.get("PGHOST", os.environ.get("POSTGRES_HOST", "localhost")),
-        "PORT": os.environ.get("PGPORT", os.environ.get("POSTGRES_PORT", "5432")),
-    }
+DB_NAME = os.environ.get("PGDATABASE") or os.environ.get("POSTGRES_DB") or "postgres"
+DB_USER = os.environ.get("PGUSER") or os.environ.get("POSTGRES_USER") or "postgres"
+DB_PASSWORD = os.environ.get("PGPASSWORD") or os.environ.get("POSTGRES_PASSWORD") or ""
+DB_HOST = os.environ.get("PGHOST") or os.environ.get("POSTGRES_HOST") or "localhost"
+DB_PORT = os.environ.get("PGPORT") or os.environ.get("POSTGRES_PORT") or "5432"
+
+db_config = {
+    "ENGINE": "django.db.backends.postgresql",
+    "NAME": DB_NAME,
+    "USER": DB_USER,
+    "PASSWORD": DB_PASSWORD,
+    "HOST": DB_HOST,
+    "PORT": DB_PORT,
+    "OPTIONS": {"sslmode": "require"},
 }
+
+DATABASES = {"default": db_config}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
