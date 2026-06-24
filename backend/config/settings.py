@@ -69,11 +69,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DB_NAME = os.environ.get("PGDATABASE") or os.environ.get("POSTGRES_DB") or "postgres"
-DB_USER = os.environ.get("PGUSER") or os.environ.get("POSTGRES_USER") or "postgres"
-DB_PASSWORD = os.environ.get("PGPASSWORD") or os.environ.get("POSTGRES_PASSWORD") or ""
-DB_HOST = os.environ.get("PGHOST") or os.environ.get("POSTGRES_HOST") or "localhost"
+DB_NAME = os.environ.get("PGDATABASE") or os.environ.get("POSTGRES_DB")
+DB_USER = os.environ.get("PGUSER") or os.environ.get("POSTGRES_USER")
+DB_PASSWORD = os.environ.get("PGPASSWORD") or os.environ.get("POSTGRES_PASSWORD")
+DB_HOST = os.environ.get("PGHOST") or os.environ.get("POSTGRES_HOST")
 DB_PORT = os.environ.get("PGPORT") or os.environ.get("POSTGRES_PORT") or "5432"
+
+if not all([DB_NAME, DB_USER, DB_PASSWORD, DB_HOST]):
+    raise RuntimeError("Missing required database environment variables: PGDATABASE/POSTGRES_DB, PGUSER/POSTGRES_USER, PGPASSWORD/POSTGRES_PASSWORD, PGHOST/POSTGRES_HOST")
 
 db_config = {
     "ENGINE": "django.db.backends.postgresql",
